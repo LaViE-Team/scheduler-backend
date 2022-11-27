@@ -39,4 +39,25 @@ export class AuthService {
             expires_in: jwtConstants.EXPIRE,
         };
     }
+
+    async register(userDto: CreateUserDto) {
+        let status = {
+            success: true,
+            message: 'ACCOUNT_CREATE_SUCCESS',
+        };
+        try {
+            userDto.password = await this._getHash(userDto.password);
+            await this.userService.createUser(userDto);
+        } catch (err) {
+            status = {
+                success: false,
+                message: err,
+            };
+        }
+        return status;
+    }
+
+    async _getHash(password: string) {
+        return hash(password, 10);
+    }
 }
