@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { compare } from 'bcrypt';
+import { hash, compare } from 'bcrypt';
 
-import { LoginUserDto } from '../users/user.dto';
+import { CreateUserDto, LoginUserDto } from '../users/user.dto';
 import { jwtConstants } from './constants';
 
 @Injectable()
@@ -38,5 +38,26 @@ export class AuthService {
             access_token: this.jwtService.sign(payload),
             expires_in: jwtConstants.EXPIRE,
         };
+    }
+
+    async register(userDto: CreateUserDto) {
+        let status = {
+            success: true,
+            message: 'ACCOUNT_CREATE_SUCCESS',
+        };
+        try {
+            userDto.password = await this._getHash(userDto.password);
+            await this.userService.createUser(userDto);
+        } catch (err) {
+            status = {
+                success: false,
+                message: err,
+            };
+        }
+        return status;
+    }
+
+    async _getHash(password: string) {
+        return hash(password, 10);
     }
 }
