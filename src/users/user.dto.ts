@@ -10,3 +10,22 @@ export class LoginUserDto {
     @IsNotEmpty()
     password: string;
 }
+
+export class CreateUserDto {
+    @ApiProperty()
+    @IsNotEmpty()
+    username: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    password: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    email: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    service_pack: number;
+}
+
