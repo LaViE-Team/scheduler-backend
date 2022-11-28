@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    HttpException,
+    HttpStatus,
+    Injectable,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { hash, compare } from 'bcrypt';
@@ -33,11 +38,36 @@ export class AuthService {
             );
         }
 
-        const payload = { user: user.username, userId: user.id };
-        return {
-            access_token: this.jwtService.sign(payload),
-            expires_in: jwtConstants.EXPIRE,
-        };
+        return this._generateJwt(user);
+    }
+
+    async loginGoogle(user) {
+        if (!user) {
+            throw new BadRequestException('Unauthenticated');
+        }
+
+        let userExists = await this.userService.findUserByEmail(user.email);
+
+        if (!userExists) {
+            const userDto: CreateUserDto = {
+                username: `user${user.providerId}`,
+                password: `pa${Math.random().toString(36).substring(2, 12)}ss`,
+                email: user.email,
+                service_pack: 0,
+            };
+
+            const status = await this.register(userDto);
+            if (!status.success) {
+                throw new HttpException(
+                    'Some error occured',
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                );
+            }
+
+            userExists = await this.userService.findUserByEmail(user.email);
+        }
+
+        return this._generateJwt(userExists);
     }
 
     async register(userDto: CreateUserDto) {
@@ -59,5 +89,18 @@ export class AuthService {
 
     async _getHash(password: string) {
         return hash(password, 10);
+    }
+
+    _generateJwt(user) {
+        const payload = { email: user.email, userId: user.id };
+        return {
+            access_token: this.jwtService.sign(payload),
+            expires_in: jwtConstants.EXPIRE,
+            user_info: {
+                username: user.username,
+                email: user.email,
+                service_pack: user.service_pack,
+            },
+        };
     }
 }
