@@ -28,4 +28,3 @@ export class CreateUserDto {
     @IsNotEmpty()
     service_pack: number;
 }
-
