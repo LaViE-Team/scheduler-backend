@@ -70,6 +70,35 @@ export class AuthService {
         return this._generateJwt(userExists);
     }
 
+    async loginFacebook(user) {
+        if (!user) {
+            throw new BadRequestException('Unauthenticated');
+        }
+
+        let userExists = await this.userService.findUserByEmail(user.email);
+
+        if (!userExists) {
+            const userDto: CreateUserDto = {
+                username: `userfb${user.id}`,
+                password: `pa${Math.random().toString(36).substring(2, 12)}ss`,
+                email: user.email,
+                service_pack: 0,
+            };
+
+            const status = await this.register(userDto);
+            if (!status.success) {
+                throw new HttpException(
+                    'Some error occured',
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                );
+            }
+
+            userExists = await this.userService.findUserByEmail(user.email);
+        }
+
+        return this._generateJwt(userExists);
+    }
+
     async register(userDto: CreateUserDto) {
         let status = {
             success: true,
