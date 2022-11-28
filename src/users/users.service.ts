@@ -20,4 +20,8 @@ export class UsersService {
             data: { ...userDto },
         });
     }
+
+    async findUserByEmail(email: string) {
+        return this.prisma.user.findUnique({ where: { email: email } });
+    }
 }
