@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    HttpStatus,
+    Post,
+    Req,
+    Res,
+    UseGuards,
+} from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto, LoginUserDto } from '../users/user.dto';
@@ -29,8 +39,16 @@ export class AuthController {
     @Get('/google/redirect')
     @ApiTags('Authentication')
     @UseGuards(GoogleOauthGuard)
-    async redirectGoogleAuth(@Req() req) {
-        return this.authService.loginGoogle(req.user);
+    async redirectGoogleAuth(@Req() req, @Res() res: Response) {
+        const loginInfo = await this.authService.loginGoogle(req.user);
+
+        res.cookie('access_token', loginInfo.access_token, {
+            expires: new Date(Date.now() + Number(loginInfo.expires_in) * 1000),
+            sameSite: true,
+            secure: true,
+        });
+
+        return res.status(HttpStatus.OK);
     }
 
     @Get('/facebook')
