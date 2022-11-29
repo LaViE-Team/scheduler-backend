@@ -43,8 +43,8 @@ export class AuthController {
         const loginInfo = await this.authService.loginGoogle(req.user);
 
         res.cookie('access_token', loginInfo.access_token, {
-            expires: new Date(Date.now() + Number(loginInfo.expires_in) * 1000),
-            sameSite: true,
+            maxAge: 1000 * Number(loginInfo.expires_in),
+            sameSite: false,
             secure: true,
         });
 
