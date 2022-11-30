@@ -10,6 +10,7 @@ import { hash, compare } from 'bcrypt';
 
 import { CreateUserDto, LoginUserDto } from '../users/user.dto';
 import { jwtConstants } from './constants';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
         private userService: UsersService,
         private jwtService: JwtService,
     ) {}
+    _authClient = new OAuth2Client({ clientId: process.env.GOOGLE_CLIENT_ID });
 
     async login(loginUserDto: LoginUserDto) {
         const user = await this.userService.findUser(loginUserDto.username);
@@ -41,18 +43,17 @@ export class AuthService {
         return this._generateJwt(user);
     }
 
-    async loginGoogle(user) {
-        if (!user) {
-            throw new BadRequestException('Unauthenticated');
-        }
+    async loginGoogle(accessToken: string) {
+        const tokenInfo = await this._authClient.getTokenInfo(accessToken);
+        const userId = tokenInfo.user_id ? tokenInfo.user_id : tokenInfo.sub;
+        const email = tokenInfo.email;
 
-        let userExists = await this.userService.findUserByEmail(user.email);
-
+        let userExists = await this.userService.findUserByEmail(email);
         if (!userExists) {
             const userDto: CreateUserDto = {
-                username: `user${user.providerId}`,
+                username: `user${userId}`,
                 password: `pa${Math.random().toString(36).substring(2, 12)}ss`,
-                email: user.email,
+                email: email,
                 service_pack: 0,
             };
 
@@ -64,7 +65,7 @@ export class AuthService {
                 );
             }
 
-            userExists = await this.userService.findUserByEmail(user.email);
+            userExists = await this.userService.findUserByEmail(email);
         }
 
         return this._generateJwt(userExists);
