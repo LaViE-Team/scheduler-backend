@@ -1,19 +1,8 @@
-import {
-    Body,
-    Controller,
-    Get,
-    HttpStatus,
-    Post,
-    Req,
-    Res,
-    UseGuards,
-} from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto, LoginUserDto } from '../users/user.dto';
-import { GoogleOauthGuard } from './guards/google-oauth.guard';
-import { FacebookAuthGuard } from './guards/facebook-auth.guard';
+import { LoginGoogleDto } from './login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -31,35 +20,9 @@ export class AuthController {
         return this.authService.register(createUserDto);
     }
 
-    @Get('/google')
+    @Post('/google')
     @ApiTags('Authentication')
-    @UseGuards(GoogleOauthGuard)
-    async authGoogle(@Req() req) {}
-
-    @Get('/google/redirect')
-    @ApiTags('Authentication')
-    @UseGuards(GoogleOauthGuard)
-    async redirectGoogleAuth(@Req() req, @Res() res: Response) {
-        const loginInfo = await this.authService.loginGoogle(req.user);
-
-        res.cookie('access_token', loginInfo.access_token, {
-            maxAge: 1000 * Number(loginInfo.expires_in),
-            sameSite: false,
-            secure: true,
-        });
-
-        return res.status(HttpStatus.OK);
-    }
-
-    @Get('/facebook')
-    @ApiTags('Authentication')
-    @UseGuards(FacebookAuthGuard)
-    async authFacebook(@Req() req) {}
-
-    @Get('/facebook/redirect')
-    @ApiTags('Authentication')
-    @UseGuards(FacebookAuthGuard)
-    async redirectFacebookAuth(@Req() req) {
-        return this.authService.loginFacebook(req.user.user);
+    async authGoogle(@Body() loginGoogleDto: LoginGoogleDto) {
+        return await this.authService.loginGoogle(loginGoogleDto.access_token);
     }
 }
