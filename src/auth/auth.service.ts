@@ -122,7 +122,7 @@ export class AuthService {
     }
 
     _generateJwt(user) {
-        const payload = { email: user.email, userId: user.id };
+        const payload = { username: user.username, sub: user.id };
         return {
             access_token: this.jwtService.sign(payload),
             expires_in: jwtConstants.EXPIRE,
