@@ -5,8 +5,7 @@ import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { AuthController } from './auth.controller';
-import { GoogleStrategy } from './strategies/google.strategy';
-import { FacebookStrategy } from './strategies/facebook.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
     imports: [
@@ -17,7 +16,7 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
             signOptions: { expiresIn: jwtConstants.EXPIRE },
         }),
     ],
-    providers: [AuthService, GoogleStrategy, FacebookStrategy],
+    providers: [AuthService, JwtStrategy],
     exports: [AuthService],
     controllers: [AuthController],
 })
