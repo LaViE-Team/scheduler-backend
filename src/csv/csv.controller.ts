@@ -23,11 +23,12 @@ export class CsvController {
         for (const line of lines) {
             const lineArr = line.split(',');
             result.push({
-                moduleId: lineArr[0],
+                subjectCode: lineArr[0],
                 classId: lineArr[1],
-                name: lineArr[2],
-                date: lineArr[3],
-                time: lineArr[4],
+                subjectName: lineArr[2],
+                day: lineArr[3],
+                startTime: lineArr[4],
+                endTime: lineArr[5],
             });
         }
         return result;
