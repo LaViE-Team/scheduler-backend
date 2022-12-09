@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { DownloadController } from './download/download.controller';
+import { CsvModule } from './csv/csv.module';
 
 @Module({
     imports: [
@@ -13,6 +14,7 @@ import { DownloadController } from './download/download.controller';
         AuthModule,
         UsersModule,
         ConfigModule.forRoot({ isGlobal: true }),
+        CsvModule,
     ],
     controllers: [AppController, DownloadController],
     providers: [AppService],
