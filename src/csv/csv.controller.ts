@@ -1,12 +1,18 @@
 import {
     Controller,
+    Get,
     Post,
+    Res,
+    StreamableFile,
     UploadedFile,
     UseInterceptors,
 } from '@nestjs/common';
 import { CsvService } from './csv.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
+import { createReadStream } from 'fs';
+import { join } from 'path';
+import type { Response } from 'express';
 
 @Controller('csv')
 export class CsvController {
@@ -66,5 +72,19 @@ export class CsvController {
             });
         }
         return result;
+    }
+
+    @Get('download-sample')
+    @ApiTags('CSV')
+    @UseInterceptors(FileInterceptor('file'))
+    downloadSampleCSV(
+        @Res({ passthrough: true }) res: Response,
+    ): StreamableFile {
+        const file = createReadStream(join(process.cwd(), 'lavie.csv'));
+        res.set({
+            'Content-Type': 'text/csv',
+            'Content-Disposition': 'attachment; filename="sample.csv"',
+        });
+        return new StreamableFile(file);
     }
 }
