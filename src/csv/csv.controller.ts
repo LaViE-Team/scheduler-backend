@@ -80,7 +80,7 @@ export class CsvController {
     downloadSampleCSV(
         @Res({ passthrough: true }) res: Response,
     ): StreamableFile {
-        const file = createReadStream(join(process.cwd(), 'lavie.csv'));
+        const file = createReadStream(join(process.cwd(), 'sample.csv'));
         res.set({
             'Content-Type': 'text/csv',
             'Content-Disposition': 'attachment; filename="sample.csv"',
