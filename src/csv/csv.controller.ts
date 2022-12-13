@@ -29,25 +29,32 @@ export class CsvController {
             const startTime = lineArr[4];
             const endTime = lineArr[5];
 
-            if (subjectCode in subjects) {
-                subjects[subjectCode]['classes'].push({
-                    classId: classId,
-                    day: day,
-                    startTime: startTime,
-                    endTime: endTime,
-                });
-            } else {
+            if (!(subjectCode in subjects)) {
                 subjects[subjectCode] = {
                     subjectName: subjectName,
-                    classes: [
-                        {
-                            classId: classId,
-                            day: day,
-                            startTime: startTime,
-                            endTime: endTime,
-                        },
-                    ],
+                    classes: {},
                 };
+                subjects[subjectCode]['classes'][classId] = [
+                    {
+                        day: day,
+                        start: startTime,
+                        end: endTime,
+                    },
+                ];
+            } else if (!(classId in subjects[subjectCode]['classes'])) {
+                subjects[subjectCode]['classes'][classId] = [
+                    {
+                        day: day,
+                        start: startTime,
+                        end: endTime,
+                    },
+                ];
+            } else {
+                subjects[subjectCode]['classes'][classId].push({
+                    day: day,
+                    start: startTime,
+                    end: endTime,
+                });
             }
         }
 
