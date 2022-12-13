@@ -105,4 +105,19 @@ export class CsvController {
     async getCacheData(@Req() req) {
         return await this.cacheManager.get(`csv_${req.user.username}`);
     }
+
+    @Post('update-cached-csv')
+    @UseGuards(JwtAuthGuard)
+    @ApiTags('CSV')
+    async updateCacheData(@Req() req) {
+        const user = req.user;
+        const body = req.body;
+        try {
+            await this.cacheManager.set(`csv_${user.username}`, body);
+            return { status: 'successful' };
+        } catch (e) {
+            console.log(e);
+            return { status: 'failed' };
+        }
+    }
 }
