@@ -6,22 +6,32 @@ import {
     StreamableFile,
     UploadedFile,
     UseInterceptors,
+    CACHE_MANAGER,
+    Inject,
+    UseGuards,
+    Req,
 } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import { CsvService } from './csv.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { createReadStream } from 'fs';
 import { join } from 'path';
 import type { Response } from 'express';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('csv')
 export class CsvController {
-    constructor(private csvService: CsvService) {}
+    constructor(
+        private csvService: CsvService,
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    ) {}
 
     @Post('upload')
     @ApiTags('CSV')
+    @UseGuards(JwtAuthGuard)
     @UseInterceptors(FileInterceptor('file'))
-    uploadFile(@UploadedFile() file: Express.Multer.File) {
+    async uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req) {
         const lines = file.buffer.toString().split('\r\n');
         lines.shift();
 
@@ -71,6 +81,7 @@ export class CsvController {
                 ...(value as object),
             });
         }
+        await this.cacheManager.set(`csv_${req.user.username}`, result);
         return result;
     }
 
@@ -86,5 +97,12 @@ export class CsvController {
             'Content-Disposition': 'attachment; filename="sample.csv"',
         });
         return new StreamableFile(file);
+    }
+
+    @Get('get-cached-csv')
+    @UseGuards(JwtAuthGuard)
+    @ApiTags('CSV')
+    async getCacheData(@Req() req) {
+        return await this.cacheManager.get(`csv_${req.user.username}`);
     }
 }
