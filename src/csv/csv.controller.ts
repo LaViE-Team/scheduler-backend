@@ -35,54 +35,67 @@ export class CsvController {
         const lines = file.buffer.toString().split('\r\n');
         lines.shift();
 
-        const subjects = {};
+        const subjects = [];
         for (const line of lines) {
             const lineArr = line.split(',');
             const subjectCode = lineArr[0];
-            const classId = lineArr[1];
+            const classCode = lineArr[1];
             const subjectName = lineArr[2];
             const day = lineArr[3];
             const startTime = lineArr[4];
             const endTime = lineArr[5];
 
-            if (!(subjectCode in subjects)) {
-                subjects[subjectCode] = {
+            // Find subject
+            const subjectIndex = subjects.findIndex(
+                (element) => element.subjectCode == subjectCode,
+            );
+            if (subjectIndex == -1) {
+                subjects.push({
+                    subjectCode: subjectCode,
                     subjectName: subjectName,
-                    classes: {},
-                };
-                subjects[subjectCode]['classes'][classId] = [
-                    {
-                        day: day,
-                        start: startTime,
-                        end: endTime,
-                    },
-                ];
-            } else if (!(classId in subjects[subjectCode]['classes'])) {
-                subjects[subjectCode]['classes'][classId] = [
-                    {
-                        day: day,
-                        start: startTime,
-                        end: endTime,
-                    },
-                ];
-            } else {
-                subjects[subjectCode]['classes'][classId].push({
-                    day: day,
-                    start: startTime,
-                    end: endTime,
+                    classes: [
+                        {
+                            classCode: classCode,
+                            time: [
+                                {
+                                    day: day,
+                                    startTime: startTime,
+                                    endTime: endTime,
+                                },
+                            ],
+                        },
+                    ],
                 });
+                continue;
             }
-        }
 
-        const result = [];
-        for (const [key, value] of Object.entries(subjects)) {
-            result.push({
-                subjectCode: key,
-                ...(value as object),
+            // Find class
+            const classIndex = subjects[subjectIndex]['classes'].findIndex(
+                (element) => element.classCode == classCode,
+            );
+            if (classIndex == -1) {
+                subjects[subjectIndex]['classes'].push({
+                    classCode: classCode,
+                    time: [
+                        {
+                            day: day,
+                            startTime: startTime,
+                            endTime: endTime,
+                        },
+                    ],
+                });
+                continue;
+            }
+
+            // Add time only
+            subjects[subjectIndex]['classes'][classIndex]['time'].push({
+                day: day,
+                startTime: startTime,
+                endTime: endTime,
             });
         }
-        await this.cacheManager.set(`csv_${req.user.username}`, result);
-        return result;
+        await this.cacheManager.set(`csv_${req.user.username}`, subjects);
+        return subjects;
     }
 
     @Get('download-sample')
