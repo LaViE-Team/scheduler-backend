@@ -8,18 +8,19 @@ export class TimetableService {
 
     async generateTimetable(username: string, desiredSubjects: Array<string>) {
         const classList = await this.getClassList(username, desiredSubjects)
+        if (!classList) return { highDensity: [], lowDensity: [] }
+
         const classIDGroup = this.getClassIDGroup(classList)
         const population = this.createTimetablePopulation(classList, classIDGroup)
         const { timetable_population, priority_point } = this.createTimetable(classList, population)
+
         const low_res = this.getLowDensityTimetable(priority_point, timetable_population)
         const high_res = this.getHighDensityTimetable(priority_point, timetable_population)
 
         const jsonClassList = classList.map((element) => element.toJson())
         await this.cacheManager.set(`class_list_${username}`, jsonClassList)
-        return {
-            highDensity: high_res,
-            lowDensity: low_res,
-        }
+
+        return { highDensity: high_res, lowDensity: low_res }
     }
 
     private async getClassList(username: string, desiredSubjects: Array<string>): Promise<Array<Class>> {
