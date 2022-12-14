@@ -37,6 +37,8 @@ export class CsvController {
 
         const subjects = [];
         for (const line of lines) {
+            if (!line) continue;
+
             const lineArr = line.split(',');
             const subjectCode = lineArr[0];
             const classCode = lineArr[1];
