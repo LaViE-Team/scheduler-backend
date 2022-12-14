@@ -28,7 +28,7 @@ export class Class {
 
     toJson() {
         const result = {
-            subjectCode: this.classID,
+            subjectCode: this.moduleID,
             subjectName: this.name,
             classCode: this.classID,
             time: [],
