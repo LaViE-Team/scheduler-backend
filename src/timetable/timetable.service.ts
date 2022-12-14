@@ -8,7 +8,7 @@ export class TimetableService {
 
     async generateTimetable(username: string, desiredSubjects: Array<string>) {
         const classList = await this.getClassList(username, desiredSubjects)
-        if (!classList) return { highDensity: [], lowDensity: [] }
+        if (!classList.length) return { highDensity: [], lowDensity: [] }
 
         const classIDGroup = this.getClassIDGroup(classList)
         const population = this.createTimetablePopulation(classList, classIDGroup)
