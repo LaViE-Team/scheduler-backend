@@ -78,7 +78,7 @@ export class TimetableService {
             const saturday = []
             const sunday = []
             const week = []
-            for (let j = 0; j < element.length - 1; j++) {
+            for (let j = 0; j < element.length; j++) {
                 classes.forEach((item) => {
                     if (element[j] == item.classID) {
                         for (const element of item.time) {
