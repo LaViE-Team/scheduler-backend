@@ -64,7 +64,15 @@ export class TimetableService {
 
     private createTimetablePopulation(classes: Array<Class>, class_id_group: Array<string>) {
         const cartesian = (...a) => a.reduce((a, b) => a.flatMap((d) => b.map((e) => [d, e].flat())))
-        return cartesian(...class_id_group)
+        let population = []
+        if (class_id_group.length == 1) {
+            for (let i = 0; i < class_id_group[0].length; i++) {
+                population.push([class_id_group[0][i]])
+            }
+        } else {
+            population = cartesian(...class_id_group)
+        }
+        return population
     }
 
     private createTimetable(classes: Array<Class>, population: Array<string>) {
