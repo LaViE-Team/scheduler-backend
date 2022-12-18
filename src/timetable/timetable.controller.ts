@@ -1,6 +1,8 @@
 import {
+    Body,
     CACHE_MANAGER,
     Controller,
+    Get,
     Inject,
     Post,
     Req,
@@ -17,10 +19,16 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { Response } from 'express'
 import { createReadStream } from 'fs'
 import { join } from 'path'
+import { ScheduleService } from '../schedule/schedule.service'
+import { DownloadTimetableDto } from './timetable.dto'
 
 @Controller('timetable')
 export class TimetableController {
-    constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private timetableService: TimetableService) {}
+    constructor(
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
+        private timetableService: TimetableService,
+        private scheduleService: ScheduleService,
+    ) {}
 
     @Post('generate-timetable')
     @UseGuards(JwtAuthGuard)
@@ -77,6 +85,49 @@ export class TimetableController {
             }
 
         const fileName = await this.timetableService.saveTimetable(user.username, extractedClasses)
+        await this.scheduleService.saveSchedule(user.username, fileName.split('/')[1])
+
+        const file = createReadStream(join(process.cwd(), fileName))
+        res.set({
+            'Content-Type': 'text/csv',
+            'Content-Disposition': 'attachment; filename="schedule.csv"',
+        })
+        return new StreamableFile(file)
+    }
+
+    @Get('get-exported-timetables')
+    @UseGuards(JwtAuthGuard)
+    @ApiTags('Timetable')
+    async getExportedTimetables(@Req() req) {
+        const user = req.user
+        const savedSchedules = await this.scheduleService.getSavedSchedules(user.username)
+        await this.cacheManager.set(`saved_schedules_${user.username}`, savedSchedules, 86400)
+        return savedSchedules
+    }
+
+    @Get('download-timetable')
+    @UseGuards(JwtAuthGuard)
+    @ApiTags('Timetable')
+    @UseInterceptors(FileInterceptor('file'))
+    async downloadTimetable(@Req() req, @Res({ passthrough: true }) res: Response) {
+        const user = req.user
+        const body: DownloadTimetableDto = req.body
+        const fileId = body.file_id
+        let savedSchedules: any[] = await this.cacheManager.get(`saved_schedules_${user.username}`)
+
+        if (!savedSchedules) {
+            savedSchedules = await this.scheduleService.getSavedSchedules(user.username)
+            await this.cacheManager.set(`saved_schedules_${user.username}`, savedSchedules, 86400)
+        }
+
+        const fileInfo = savedSchedules.find((element) => element.id == fileId)
+        if (!fileInfo)
+            return {
+                status: 'failed',
+                msg: 'schedule not found',
+            }
+
+        const fileName = `generated_files/${fileInfo.schedule_file}`
         const file = createReadStream(join(process.cwd(), fileName))
         res.set({
             'Content-Type': 'text/csv',
