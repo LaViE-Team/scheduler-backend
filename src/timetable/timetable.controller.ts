@@ -1,5 +1,4 @@
 import {
-    Body,
     CACHE_MANAGER,
     Controller,
     Get,
