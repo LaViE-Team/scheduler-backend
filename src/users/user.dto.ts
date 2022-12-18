@@ -28,3 +28,13 @@ export class CreateUserDto {
     @IsNotEmpty()
     service_pack: number
 }
+
+export class ChangePasswordDto {
+    @ApiProperty()
+    @IsNotEmpty()
+    oldPassword: string
+
+    @ApiProperty()
+    @IsNotEmpty()
+    newPassword: string
+}
