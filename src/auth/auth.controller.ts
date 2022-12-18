@@ -1,8 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { ApiTags } from '@nestjs/swagger'
-import { CreateUserDto, LoginUserDto } from '../users/user.dto'
+import { ChangePasswordDto, CreateUserDto, LoginUserDto } from '../users/user.dto'
 import { LoginGoogleDto } from './login.dto'
+import { JwtAuthGuard } from './guards/jwt.guard'
 
 @Controller('auth')
 export class AuthController {
@@ -24,5 +25,14 @@ export class AuthController {
     @ApiTags('Authentication')
     async authGoogle(@Body() loginGoogleDto: LoginGoogleDto) {
         return await this.authService.loginGoogle(loginGoogleDto.access_token)
+    }
+
+    @Post('change-password')
+    @UseGuards(JwtAuthGuard)
+    @ApiTags('Authentication')
+    async changePassword(@Req() req) {
+        const changePwdDto: ChangePasswordDto = req.body
+        const user = req.user
+        return await this.authService.changePassword(user.username, changePwdDto)
     }
 }

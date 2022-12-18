@@ -24,4 +24,11 @@ export class UsersService {
     async findUserByEmail(email: string) {
         return this.prisma.user.findUnique({ where: { email: email } })
     }
+
+    async changePassword(username: string, newPassword: string) {
+        return await this.prisma.user.update({
+            where: { username: username },
+            data: { password: newPassword },
+        })
+    }
 }

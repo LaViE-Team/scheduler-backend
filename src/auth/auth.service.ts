@@ -3,7 +3,7 @@ import { UsersService } from '../users/users.service'
 import { JwtService } from '@nestjs/jwt'
 import { hash, compare } from 'bcrypt'
 
-import { CreateUserDto, LoginUserDto } from '../users/user.dto'
+import { ChangePasswordDto, CreateUserDto, LoginUserDto } from '../users/user.dto'
 import { jwtConstants } from './constants'
 import { OAuth2Client } from 'google-auth-library'
 
@@ -91,6 +91,30 @@ export class AuthService {
                 message: err,
             }
         }
+        return status
+    }
+
+    async changePassword(username: string, changePwdDto: ChangePasswordDto) {
+        const status = {
+            success: true,
+            message: 'PASSWORD_CHANGED_SUCCESS',
+        }
+
+        const user = await this.userService.findUser(username)
+        const passwordMatch = await compare(changePwdDto.oldPassword, user.password)
+        if (!passwordMatch) {
+            throw new HttpException('invalid_credentials', HttpStatus.UNAUTHORIZED)
+        }
+
+        const newPassword = await this._getHash(changePwdDto.newPassword)
+        try {
+            await this.userService.changePassword(username, newPassword)
+        } catch (e) {
+            console.log(e)
+            status.success = false
+            status.message = 'UNKNOWN_ERROR'
+        }
+
         return status
     }
 
