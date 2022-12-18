@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config'
 import { CsvModule } from './csv/csv.module'
 import { redisStore } from 'cache-manager-redis-store'
 import { TimetableModule } from './timetable/timetable.module'
+import { ScheduleModule } from './schedule/schedule.module'
 
 @Module({
     imports: [
@@ -35,6 +36,7 @@ import { TimetableModule } from './timetable/timetable.module'
                 }
             },
         }),
+        ScheduleModule,
     ],
     controllers: [AppController],
     providers: [AppService],
