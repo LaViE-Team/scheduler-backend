@@ -130,6 +130,7 @@ export class TimetableController {
             'Content-Type': 'text/csv',
             'Content-Disposition': 'attachment; filename="schedule.csv"',
         })
+        await this.scheduleService.updateExportDate(fileInfo.schedule_file)
         return new StreamableFile(file)
     }
 }
