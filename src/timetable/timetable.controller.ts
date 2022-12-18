@@ -19,7 +19,6 @@ import { Response } from 'express'
 import { createReadStream } from 'fs'
 import { join } from 'path'
 import { ScheduleService } from '../schedule/schedule.service'
-import { DownloadTimetableDto } from './timetable.dto'
 
 @Controller('timetable')
 export class TimetableController {
@@ -110,8 +109,7 @@ export class TimetableController {
     @UseInterceptors(FileInterceptor('file'))
     async downloadTimetable(@Req() req, @Res({ passthrough: true }) res: Response) {
         const user = req.user
-        const body: DownloadTimetableDto = req.body
-        const fileId = body.file_id
+        const fileId = req.query['file_id']
         let savedSchedules: any[] = await this.cacheManager.get(`saved_schedules_${user.username}`)
 
         if (!savedSchedules) {
