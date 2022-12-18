@@ -7,16 +7,17 @@ import { UsersModule } from './users/users.module'
 import { ConfigModule } from '@nestjs/config'
 import { CsvModule } from './csv/csv.module'
 import { redisStore } from 'cache-manager-redis-store'
-import { TimetableService } from './timetable/timetable.service'
-import { TimetableController } from './timetable/timetable.controller'
+import { TimetableModule } from './timetable/timetable.module'
+import { ScheduleModule } from './schedule/schedule.module'
 
 @Module({
     imports: [
         PrismaModule,
         AuthModule,
         UsersModule,
-        ConfigModule.forRoot({ isGlobal: true }),
+        TimetableModule,
         CsvModule,
+        ConfigModule.forRoot({ isGlobal: true }),
         CacheModule.registerAsync(<any>{
             isGlobal: true,
             useFactory: async () => {
@@ -35,8 +36,9 @@ import { TimetableController } from './timetable/timetable.controller'
                 }
             },
         }),
+        ScheduleModule,
     ],
-    controllers: [AppController, TimetableController],
-    providers: [AppService, TimetableService],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}

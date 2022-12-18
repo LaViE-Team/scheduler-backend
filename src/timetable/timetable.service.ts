@@ -1,6 +1,7 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { Time, Class } from './timetable.classes'
+import * as fs from 'fs'
 
 @Injectable()
 export class TimetableService {
@@ -21,6 +22,28 @@ export class TimetableService {
         await this.cacheManager.set(`class_list_${username}`, jsonClassList)
 
         return { highDensity: high_res, lowDensity: low_res }
+    }
+
+    async saveTimetable(username: string, extractedClasses: Array<any>) {
+        const classArr = []
+        const fileName = `generated_files/${username}_${Date.now()}.csv`
+        classArr.push(['SubjectCode', 'ClassID', 'SubjectName', 'Day', 'StartTime', 'EndTime'])
+
+        for (const extractedClass of extractedClasses) {
+            for (const time of extractedClass.time) {
+                classArr.push([
+                    extractedClass.subjectCode,
+                    extractedClass.classCode,
+                    extractedClass.subjectName,
+                    time.day,
+                    time.startTime,
+                    time.endTime,
+                ])
+            }
+        }
+        const fileString = classArr.map((element) => element.join(',')).join('\n')
+        fs.writeFileSync(fileName, fileString, 'utf8')
+        return fileName
     }
 
     private async getClassList(username: string, desiredSubjects: Array<string>): Promise<Array<Class>> {

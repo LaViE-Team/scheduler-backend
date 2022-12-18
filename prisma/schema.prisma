@@ -32,6 +32,6 @@ model schedule {
     schedule_file   String      @unique
     created_at      DateTime    @default(now())
     export_date     DateTime    @default(now())
-    username        String      @unique
+    username        String
     owner           user        @relation(fields: [username], references: [username])
 }
