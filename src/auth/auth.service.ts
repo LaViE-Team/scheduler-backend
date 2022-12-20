@@ -107,7 +107,7 @@ export class AuthService {
         const user = await this.userService.findUser(username)
         const passwordMatch = await compare(changePwdDto.oldPassword, user.password)
         if (!passwordMatch) {
-            throw new HttpException('invalid_credentials', HttpStatus.UNAUTHORIZED)
+            throw new HttpException('invalid_credentials', HttpStatus.FORBIDDEN)
         }
 
         const newPassword = await this._getHash(changePwdDto.newPassword)
