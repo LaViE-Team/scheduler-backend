@@ -98,18 +98,9 @@ export class TimetableController {
     @ApiTags('Timetable')
     async getExportedTimetables(@Req() req) {
         const user = req.user
-        const savedSchedules: any[] = await this.scheduleService.getSavedSchedules(user.username)
-        const result = savedSchedules.map((e) => {
-            const createdAt = e.created_at.toLocaleString('vi-vn', { timeZone: 'Asia/Ho_Chi_Minh' })
-            const exportDate = e.export_date.toLocaleString('vi-vn', { timeZone: 'Asia/Ho_Chi_Minh' })
-            return {
-                id: e.id,
-                schedule_file: e.schedule_file,
-                created_at: createdAt.split(' ')[1],
-                export_date: exportDate.split(' ')[1],
-            }
-        })
-        return result
+        const savedSchedules = await this.scheduleService.getSavedSchedules(user.username)
+        await this.cacheManager.set(`saved_schedules_${user.username}`, savedSchedules, 86400)
+        return savedSchedules
     }
 
     @Get('download-timetable')
