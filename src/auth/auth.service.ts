@@ -33,8 +33,12 @@ export class AuthService {
 
         let userExists = await this.userService.findUserByEmail(email)
         if (!userExists) {
+            let username = email.split('@')[0]
+            const usernameExists = await this.userService.findUser(username)
+            if (usernameExists) username = `user${userId}`
+
             const userDto: CreateUserDto = {
-                username: `user${userId}`,
+                username: username,
                 password: `pa${Math.random().toString(36).substring(2, 12)}ss`,
                 email: email,
                 service_pack: 0,
