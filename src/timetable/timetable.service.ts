@@ -41,7 +41,7 @@ export class TimetableService {
                 ])
             }
         }
-        const fileString = classArr.map((element) => element.join(';')).join('\n')
+        const fileString = classArr.map((element) => element.join(',')).join('\n')
         fs.writeFileSync(fileName, fileString, 'utf8')
         return fileName
     }
