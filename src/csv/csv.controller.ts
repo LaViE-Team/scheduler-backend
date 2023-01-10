@@ -4,21 +4,23 @@ import {
     Post,
     Res,
     StreamableFile,
-    UploadedFile,
     UseInterceptors,
     CACHE_MANAGER,
     Inject,
     UseGuards,
     Req,
+    UploadedFile,
 } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { CsvService } from './csv.service'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags } from '@nestjs/swagger'
-import { createReadStream } from 'fs'
+import { createReadStream, readFileSync } from 'fs'
 import { join } from 'path'
 import type { Response } from 'express'
 import { JwtAuthGuard } from '../auth/guards/jwt.guard'
+import * as XLSX from 'xlsx'
+import { diskStorage } from 'multer'
 
 @Controller('csv')
 export class CsvController {
@@ -27,12 +29,26 @@ export class CsvController {
     @Post('upload')
     @ApiTags('CSV')
     @UseGuards(JwtAuthGuard)
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: diskStorage({
+                destination: './uploads/',
+                filename: function (_req, file, cb) {
+                    cb(null, file.originalname)
+                },
+            }),
+        }),
+    )
     async uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req) {
-        const lines = file.buffer.toString().split('\r\n')
+        const subjects = []
+        const workBook = XLSX.readFile('./uploads/' + file.originalname)
+        XLSX.writeFile(workBook, 'output.csv', { bookType: 'csv' })
+
+        const output = readFileSync('output.csv')
+
+        const lines = output.toString().split('\n')
         lines.shift()
 
-        const subjects = []
         for (const line of lines) {
             if (!line) continue
 
