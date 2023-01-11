@@ -21,6 +21,7 @@ import type { Response } from 'express'
 import { JwtAuthGuard } from '../auth/guards/jwt.guard'
 import * as XLSX from 'xlsx'
 import { diskStorage } from 'multer'
+import { HttpException, HttpStatus } from '@nestjs/common'
 
 @Controller('csv')
 export class CsvController {
@@ -37,6 +38,13 @@ export class CsvController {
                     cb(null, file.originalname)
                 },
             }),
+            fileFilter: function (_req, file, cb) {
+                const ext = file.mimetype
+                if (ext !== 'text/csv' && ext !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                    return cb(new HttpException('Invalid file type', HttpStatus.BAD_REQUEST), false)
+                }
+                return cb(null, true)
+            },
         }),
     )
     async uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req) {
