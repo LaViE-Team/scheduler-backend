@@ -40,7 +40,11 @@ export class CsvController {
             }),
             fileFilter: function (_req, file, cb) {
                 const ext = file.mimetype
-                if (ext !== 'text/csv' && ext !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                if (
+                    ext !== 'text/csv' &&
+                    ext !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' &&
+                    ext !== 'application/vnd.ms-excel'
+                ) {
                     return cb(new HttpException('Invalid file type', HttpStatus.BAD_REQUEST), false)
                 }
                 return cb(null, true)
