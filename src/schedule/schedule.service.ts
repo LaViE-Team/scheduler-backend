@@ -37,12 +37,15 @@ export class ScheduleService {
             })
             .then((userSchedules) => userSchedules.map((userSchedule) => ({ ...userSchedule.schedule })))
     }
-    async shareSchedule(username: string, shareInfo: { shareWith: string; scheduleId: number }) {
+    async shareSchedule(username: string, shareInfo: { share_with: string; schedule_id: number }) {
+        const shareWith = shareInfo.share_with ? shareInfo.share_with : ''
+        const scheduleId = shareInfo.schedule_id ? shareInfo.schedule_id : -1
+
         // Check if user has the schedule
         const hasSchedule = await this.prisma.user_schedule.findFirst({
             where: {
                 username: username,
-                schedule_id: shareInfo.scheduleId,
+                schedule_id: scheduleId,
                 shared: false,
             },
         })
@@ -53,12 +56,10 @@ export class ScheduleService {
             }
 
         // Check if shareWith - scheduleId record exists
-        const shareRelationExists = await this.prisma.user_schedule.findUnique({
+        const shareRelationExists = await this.prisma.user_schedule.findFirst({
             where: {
-                schedule_id_username: {
-                    schedule_id: shareInfo.scheduleId,
-                    username: shareInfo.shareWith,
-                },
+                schedule_id: scheduleId,
+                username: shareWith,
             },
         })
         if (shareRelationExists)
@@ -68,7 +69,7 @@ export class ScheduleService {
             }
 
         // Check if shareWith user exists
-        const userShareWithExists = await this.userService.findUser(shareInfo.shareWith)
+        const userShareWithExists = await this.userService.findUser(shareWith)
         if (!userShareWithExists)
             return {
                 status: 'failed',
@@ -77,8 +78,8 @@ export class ScheduleService {
 
         return this.prisma.user_schedule.create({
             data: {
-                username: shareInfo.shareWith,
-                schedule_id: shareInfo.scheduleId,
+                username: shareWith,
+                schedule_id: scheduleId,
                 shared: true,
                 shared_by_username: username,
             },
