@@ -142,4 +142,40 @@ export class TimetableController {
         await this.scheduleService.updateExportDate(fileInfo.schedule_file)
         return new StreamableFile(file)
     }
+
+    @Post('share-timetable')
+    @UseGuards(JwtAuthGuard)
+    @ApiTags('Timetable')
+    async shareTimetable(@Req() req) {
+        const user = req.user
+        const shareWith: string = req.body.share_with
+        const timetableClasses: string[] = req.body.timetable_classes
+        if (!timetableClasses)
+            return {
+                status: 'failed',
+                msg: 'invalid body',
+            }
+
+        const classList: any[] = await this.cacheManager.get(`class_list_${user.username}`)
+        if (classList == null || classList == undefined || classList.length == 0)
+            return {
+                status: 'failed',
+                msg: 'please re-upload the csv/xls file',
+            }
+        const extractedClasses = timetableClasses.map((element) => classList.find((item) => item.classCode == element))
+
+        if (extractedClasses.includes(undefined))
+            return {
+                status: 'failed',
+                msg: 'class not exist in chosen subjects list',
+            }
+
+        const fileName = await this.timetableService.saveTimetable(user.username, extractedClasses, true)
+        const savedSchedule = await this.scheduleService.saveSchedule(user.username, fileName.split('/')[1])
+
+        return this.scheduleService.shareSchedule(user.username, {
+            share_with: shareWith,
+            schedule_id: savedSchedule.id,
+        })
+    }
 }
