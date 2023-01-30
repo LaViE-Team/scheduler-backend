@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { UsersService } from '../users/users.service'
+import { readFileSync } from 'fs'
 
 @Injectable()
 export class ScheduleService {
@@ -84,5 +85,28 @@ export class ScheduleService {
                 shared_by_username: username,
             },
         })
+    }
+
+    async getSharedSchedules(username: string) {
+        const scheduleNames = await this.prisma.user_schedule
+            .findMany({
+                where: {
+                    username: username,
+                    shared: true,
+                },
+                include: {
+                    schedule: true,
+                },
+            })
+            .then((userSchedules) =>
+                userSchedules.map((userSchedule) => userSchedule.schedule.schedule_file.replace('csv', 'json')),
+            )
+
+        const result = []
+        for (const fileName of scheduleNames) {
+            const file = readFileSync(`shared_files/${fileName}`, 'utf8')
+            result.push(JSON.parse(file))
+        }
+        return result
     }
 }
