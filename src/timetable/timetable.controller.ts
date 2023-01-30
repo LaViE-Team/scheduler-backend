@@ -173,9 +173,17 @@ export class TimetableController {
         const fileName = await this.timetableService.saveTimetable(user.username, extractedClasses, true)
         const savedSchedule = await this.scheduleService.saveSchedule(user.username, fileName.split('/')[1])
 
-        return this.scheduleService.shareSchedule(user.username, {
+        return await this.scheduleService.shareSchedule(user.username, {
             share_with: shareWith,
             schedule_id: savedSchedule.id,
         })
+    }
+
+    @Get('get-shared-timetables')
+    @UseGuards(JwtAuthGuard)
+    @ApiTags('Timetable')
+    async getSharedTimetables(@Req() req) {
+        const user = req.user
+        return await this.scheduleService.getSharedSchedules(user.username)
     }
 }
