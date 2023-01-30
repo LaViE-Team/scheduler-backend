@@ -13,18 +13,10 @@ datasource db {
 model user {
     username        String      @id
     password        String
-    name            String?
     email           String?     @unique
     service_pack    Int         @default(0)
-    profile         profile?
-    schedules       schedule[]
-}
-
-model profile {
-    id        Int     @id @default(autoincrement())
-    bio       String?
-    username  String  @unique
-    user      user    @relation(fields: [username], references: [username])
+    schedules       user_schedule[]     @relation(name: "ownership")
+    share           user_schedule[]     @relation(name: "share")
 }
 
 model schedule {
@@ -32,6 +24,17 @@ model schedule {
     schedule_file   String      @unique
     created_at      DateTime    @default(now())
     export_date     DateTime    @default(now())
-    username        String
-    owner           user        @relation(fields: [username], references: [username])
+    user_schedules  user_schedule[]
+}
+
+model user_schedule {
+    schedule_id         Int
+    schedule            schedule    @relation(fields: [schedule_id], references: [id])
+    username            String
+    owner               user        @relation(name: "ownership", fields: [username], references: [username])
+    shared              Boolean     @default(false)
+    shared_by_username  String?
+    shared_by           user?       @relation(name: "share", fields: [shared_by_username], references: [username])
+
+    @@id([schedule_id, username])
 }
