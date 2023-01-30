@@ -22,6 +22,16 @@ export class ScheduleService {
     }
 
     async getSavedSchedules(username: string) {
-        return this.prisma.schedule.findMany({ where: { username: username } })
+        return this.prisma.user_schedule
+            .findMany({
+                where: {
+                    username: username,
+                    shared: false,
+                },
+                include: {
+                    schedule: true,
+                },
+            })
+            .then((userSchedules) => userSchedules.map((userSchedule) => ({ ...userSchedule.schedule })))
     }
 }
