@@ -9,8 +9,10 @@ export class ScheduleService {
     async saveSchedule(username: string, fileName: string) {
         return this.prisma.schedule.create({
             data: {
-                username: username,
                 schedule_file: fileName,
+                user_schedules: {
+                    create: [{ username: username }],
+                },
             },
         })
     }
