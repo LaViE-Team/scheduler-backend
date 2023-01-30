@@ -24,11 +24,10 @@ export class TimetableService {
         return { highDensity: high_res, lowDensity: low_res }
     }
 
-    async saveTimetable(username: string, extractedClasses: Array<any>) {
+    async saveTimetable(username: string, extractedClasses: Array<any>, shared = false) {
         const classArr = []
-        const fileName = `generated_files/${username}_${Date.now()}.csv`
-        classArr.push(['SubjectCode', 'ClassID', 'SubjectName', 'Day', 'StartTime', 'EndTime'])
 
+        classArr.push(['SubjectCode', 'ClassID', 'SubjectName', 'Day', 'StartTime', 'EndTime'])
         for (const extractedClass of extractedClasses) {
             for (const time of extractedClass.time) {
                 classArr.push([
@@ -41,8 +40,20 @@ export class TimetableService {
                 ])
             }
         }
-        const fileString = classArr.map((element) => element.join(',')).join('\n')
+
+        let fileName, fileString
+        const timestamp = Date.now()
+
+        fileName = `generated_files/${username}_${timestamp}.csv`
+        fileString = classArr.map((element) => element.join(',')).join('\n')
         fs.writeFileSync(fileName, fileString, 'utf8')
+
+        if (shared) {
+            classArr.shift()
+            fileName = `shared_files/${username}_${timestamp}.json`
+            fileString = JSON.stringify(classArr)
+            fs.writeFileSync(fileName, fileString, 'utf8')
+        }
         return fileName
     }
 
