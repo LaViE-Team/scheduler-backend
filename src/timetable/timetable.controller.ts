@@ -85,6 +85,10 @@ export class TimetableController {
         const fileName = await this.timetableService.saveTimetable(user.username, extractedClasses)
         await this.scheduleService.saveSchedule(user.username, fileName.split('/')[1])
 
+        // Update cache
+        const savedSchedules = await this.scheduleService.getSavedSchedules(user.username)
+        await this.cacheManager.set(`saved_schedules_${user.username}`, savedSchedules, 86400)
+
         const file = createReadStream(join(process.cwd(), fileName))
         res.set({
             'Content-Type': 'text/csv',
@@ -98,8 +102,13 @@ export class TimetableController {
     @ApiTags('Timetable')
     async getExportedTimetables(@Req() req) {
         const user = req.user
-        const savedSchedules = await this.scheduleService.getSavedSchedules(user.username)
-        await this.cacheManager.set(`saved_schedules_${user.username}`, savedSchedules, 86400)
+        let savedSchedules = await this.cacheManager.get(`saved_schedules_${user.username}`)
+
+        if (savedSchedules) {
+            savedSchedules = await this.scheduleService.getSavedSchedules(user.username)
+            await this.cacheManager.set(`saved_schedules_${user.username}`, savedSchedules, 86400)
+        }
+
         return savedSchedules
     }
 
