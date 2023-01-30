@@ -43,15 +43,17 @@ export class TimetableService {
 
         let fileName, fileString
         const timestamp = Date.now()
-        if (shared) {
-            fileName = `shared_files/${username}_${timestamp}.json`
-            fileString = JSON.stringify(classArr)
-            fs.writeFileSync(fileName, fileString, 'utf8')
-        }
 
         fileName = `generated_files/${username}_${timestamp}.csv`
         fileString = classArr.map((element) => element.join(',')).join('\n')
         fs.writeFileSync(fileName, fileString, 'utf8')
+
+        if (shared) {
+            classArr.shift()
+            fileName = `shared_files/${username}_${timestamp}.json`
+            fileString = JSON.stringify(classArr)
+            fs.writeFileSync(fileName, fileString, 'utf8')
+        }
         return fileName
     }
 
