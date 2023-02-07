@@ -75,24 +75,47 @@ export class TimetableService {
 
     private async getClassList(username: string, desiredSubjects: Array<string>): Promise<Array<Class>> {
         const subjects: Array<any> = await this.cacheManager.get(`csv_${username}`)
-        const result = []
-
+        let result = []
+        let is_duplicate = 0
         for (const subjectCode of desiredSubjects) {
             const subjectIndex = subjects.findIndex((element) => element.subjectCode == subjectCode)
             if (subjectIndex == -1) return []
 
             const subject = subjects[subjectIndex]
             for (const classInfo of subject['classes']) {
+                is_duplicate = 0
                 const classInstance = new Class(subject.subjectCode, classInfo.classCode, subject.subjectName)
-
                 for (const timeInfo of classInfo['time']) {
                     const time = new Time(timeInfo['day'], timeInfo['startTime'], timeInfo['endTime'])
-
                     classInstance.addTime(time)
                 }
-
-                result.push(classInstance)
+                console.log(classInstance)
+                for (let i = 0; i < result.length; i++) {
+                    if (
+                        result[i]['time']['day'] == classInstance['time']['day'] &&
+                        result[i]['moduleID'] != classInstance['moduleID']
+                    ) {
+                        const start_time_1 = result[i]['time'][0]['startTime'].replace(':', '')
+                        const start_time_2 = classInstance['time'][0]['startTime'].replace(':', '')
+                        const end_time_1 = result[i]['time'][0]['endTime'].replace(':', '')
+                        const end_time_2 = classInstance['time'][0]['endTime'].replace(':', '')
+                        if (
+                            (Number(start_time_1) <= Number(start_time_2) &&
+                                Number(end_time_1) >= Number(end_time_2)) ||
+                            (Number(start_time_1) >= Number(start_time_2) && Number(end_time_1) <= Number(end_time_2))
+                        ) {
+                            is_duplicate = 1
+                        }
+                    }
+                }
+                if (is_duplicate == 0) {
+                    result.push(classInstance)
+                }
             }
+        }
+        const unique_module_id = Array.from(new Set(result.map((item) => item.moduleID)))
+        if (unique_module_id.length != desiredSubjects.length) {
+            return []
         }
         return result
     }
@@ -190,7 +213,9 @@ export class TimetableService {
                 scheduled_days = scheduled_days + 1
             }
         }
-
+        if (empty_time == 0) {
+            return 1 / scheduled_days
+        }
         return 1 / scheduled_days + 1 / (empty_time * 0.5)
     }
 
